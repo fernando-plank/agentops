@@ -1,9 +1,10 @@
 import json
 import yaml
 from .http_client import HttpClient
-from os import environ
+import os
 from .helpers import singleton
 from dotenv import load_dotenv
+from .log_config import logger
 
 load_dotenv()
 
@@ -13,9 +14,14 @@ class TimeTravel:
     def __init__(self):
         self._time_travel_map = None
 
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(script_dir)
+        cache_path = os.path.join(parent_dir, 'time_travel.json')
+
         try:
-            with open("time_travel.json", "r") as file:
+            with open(cache_path, "r") as file:
                 self._time_travel_map = json.load(file)
+                print('hi')
         except FileNotFoundError:
             return
 
@@ -59,7 +65,11 @@ def fetch_response_from_time_travel_cache(kwargs):
 
 def check_time_travel_active():
     try:
-        with open("time_travel.yaml", "r") as config_file:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(script_dir)
+        config_file_path = os.path.join(parent_dir, 'time_travel.yaml')
+
+        with open(config_file_path, "r") as config_file:
             config = yaml.safe_load(config_file)
             if config.get("Time_Travel_Debugging_Active", True):
                 # TODO: Find a way to only set background for cache hits or duration relevant to time travel.
@@ -67,6 +77,8 @@ def check_time_travel_active():
                 # but still not ideal
                 manage_time_travel_state(activated=True)
                 return True
+    except FileNotFoundError:
+        logger.error("Time travel debugging failed -- Could not find time_travel.yaml")
     except Exception as e:
         pass
 
@@ -101,7 +113,7 @@ def set_time_travel_active_state(active_setting):
 
 
 def set_background_color_truecolor(r, g, b):
-    print(f"\033[48;2;{r};{g};{b}m\033[K", end="")
+    print(f"🖇️⏰ ~ ", end="")
 
 
 def reset_terminal_background_color():
