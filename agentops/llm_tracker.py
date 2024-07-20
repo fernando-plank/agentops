@@ -422,7 +422,6 @@ class LlmTracker:
     def override_openai_v1_completion(self):
         from openai.resources.chat import completions
         from openai.types.chat import ChatCompletion
-        import json
 
         # Store the original method
         global original_create
@@ -431,6 +430,7 @@ class LlmTracker:
         def patched_function(*args, **kwargs):
             init_timestamp = get_ISO_time()
 
+            # Check Time Travel cache for matching prompt message
             time_travel_response = fetch_response_from_time_travel_cache(kwargs)
             if time_travel_response:
                 result_model = ChatCompletion.model_validate_json(time_travel_response)
@@ -442,52 +442,30 @@ class LlmTracker:
             result = original_create(*args, **kwargs)
             return self._handle_response_v1_openai(result, kwargs, init_timestamp)
 
-            # Time Travel Debugging
-            # vlite = VLite2(vdb_name="test")
-            # threshold = 0.8
-
-            # messages = kwargs["messages"]
-
-            # cache_query = messages[-1][
-            #     "content"
-            # ]  # TODO: loop over all the messages to build cache_query
-
-            # results = vlite.retrieve(
-            #     text=cache_query,
-            #     top_k=1,
-            #     autocut=False,
-            #     get_metadata=True,
-            #     get_similarities=True,
-            # )
-            # metadata = results["metadata"]
-            # sims = results["scores"]
-            # if metadata and sims:
-            #     if sims[0] > threshold:
-            #         result_json_string = metadata[0]["cached_response"]
-            #         result_model = ChatCompletion.model_validate_json(
-            #             result_json_string
-            #         )
-            #         return self._handle_response_v1_openai(
-            #             result_model, kwargs, init_timestamp
-            #         )
-
-            # Call the original function with its original arguments
-            # result = original_create(*args, **kwargs)
-            # return self._handle_response_v1_openai(result, kwargs, init_timestamp)
-
         # Override the original method with the patched one
         completions.Completions.create = patched_function
 
     def override_openai_v1_async_completion(self):
         from openai.resources.chat import completions
+        from openai.types.chat import ChatCompletion
 
         # Store the original method
         global original_create_async
         original_create_async = completions.AsyncCompletions.create
 
         async def patched_function(*args, **kwargs):
-            # Call the original function with its original arguments
+
             init_timestamp = get_ISO_time()
+
+            # Check Time Travel cache for matching prompt message
+            time_travel_response = fetch_response_from_time_travel_cache(kwargs)
+            if time_travel_response:
+                result_model = ChatCompletion.model_validate_json(time_travel_response)
+                return self._handle_response_v1_openai(
+                    result_model, kwargs, init_timestamp
+                )
+
+            # Call the original function with its original arguments
             result = await original_create_async(*args, **kwargs)
             return self._handle_response_v1_openai(result, kwargs, init_timestamp)
 
