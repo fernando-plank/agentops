@@ -2,8 +2,6 @@ from openai import OpenAI, AsyncOpenAI
 import openai
 from openai.resources.chat import completions
 import agentops
-import time
-import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()

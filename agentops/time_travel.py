@@ -1,4 +1,5 @@
 import json
+import yaml
 from .http_client import HttpClient
 from os import environ
 from .helpers import singleton
@@ -21,7 +22,7 @@ class TimeTravel:
 
 def fetch_time_travel_id(ttd_id):
     try:
-        endpoint = environ.get("AGENTOPS_API_ENDPOINT", "https://api.agentops.ai")
+        endpoint = "http://localhost:8000"
         payload = json.dumps({"ttd_id": ttd_id}).encode("utf-8")
         ttd_res = HttpClient.post(f"{endpoint}/v2/get_ttd", payload)
         if ttd_res.code != 200:
@@ -57,8 +58,6 @@ def fetch_response_from_time_travel_cache(kwargs):
 
 
 def check_time_travel_active():
-    import yaml
-
     try:
         with open("time_travel.yaml", "r") as config_file:
             config = yaml.safe_load(config_file)
@@ -75,8 +74,6 @@ def check_time_travel_active():
 
 
 def set_time_travel_active_state(active_setting):
-    import yaml
-
     config_path = "time_travel.yaml"
     try:
         with open(config_path, "r") as config_file:
