@@ -7,9 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI()
 
-# TODO: Instructor
-
-# Assuming that initializing will trigger the LlmTracker to override methods
 agentops.init(tags=["TTD Test", openai.__version__])
 
 chat_completion_1 = client.chat.completions.create(

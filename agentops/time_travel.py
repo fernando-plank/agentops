@@ -16,12 +16,11 @@ class TimeTravel:
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(script_dir)
-        cache_path = os.path.join(parent_dir, 'time_travel.json')
+        cache_path = os.path.join(parent_dir, "time_travel.json")
 
         try:
             with open(cache_path, "r") as file:
                 self._time_travel_map = json.load(file)
-                print('hi')
         except FileNotFoundError:
             return
 
@@ -36,7 +35,6 @@ def fetch_time_travel_id(ttd_id):
                 f"Failed to fetch TTD with status code {ttd_res.status_code}"
             )
 
-        print(f"Successfully fetched TTD cache for TTD ID {ttd_id}")
         prompt_to_returns_map = {
             (
                 str({"messages": item["prompt"]["messages"]})
@@ -67,7 +65,7 @@ def check_time_travel_active():
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(script_dir)
-        config_file_path = os.path.join(parent_dir, 'time_travel.yaml')
+        config_file_path = os.path.join(parent_dir, "time_travel.yaml")
 
         with open(config_file_path, "r") as config_file:
             config = yaml.safe_load(config_file)
@@ -106,14 +104,14 @@ def set_time_travel_active_state(active_setting):
 
         if active_setting == "on":
             manage_time_travel_state(activated=True)
-            print("🖇 AgentOps: Time Travel Activated")
+            print("AgentOps: Time Travel Activated")
         else:
             manage_time_travel_state(activated=False)
             print("🖇 AgentOps: Time Travel Deactivated")
 
 
 def set_background_color_truecolor(r, g, b):
-    print(f"🖇️⏰ ~ ", end="")
+    print(f"🖇️ ⏰ | ", end="")
 
 
 def reset_terminal_background_color():
