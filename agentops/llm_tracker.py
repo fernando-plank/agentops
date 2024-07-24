@@ -9,7 +9,10 @@ from .helpers import get_ISO_time, check_call_stack_for_agent_id
 import inspect
 from typing import Optional
 import pprint
-from .time_travel import fetch_completion_override_from_time_travel_cache
+from .time_travel import (
+    fetch_completion_override_from_time_travel_cache,
+    fetch_prompt_override_from_time_travel_cache,
+)
 
 
 original_create = None
@@ -430,15 +433,18 @@ class LlmTracker:
         def patched_function(*args, **kwargs):
             init_timestamp = get_ISO_time()
 
-            # Check Time Travel cache for matching prompt message
-            time_travel_response = fetch_completion_override_from_time_travel_cache(
+            completion_override = fetch_completion_override_from_time_travel_cache(
                 kwargs
             )
-            if time_travel_response:
-                result_model = ChatCompletion.model_validate_json(time_travel_response)
+            if completion_override:
+                result_model = ChatCompletion.model_validate_json(completion_override)
                 return self._handle_response_v1_openai(
                     result_model, kwargs, init_timestamp
                 )
+
+            prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
+            if prompt_override:
+                kwargs["messages"] = prompt_override  # TODO: FIX
 
             # Call the original function with its original arguments
             result = original_create(*args, **kwargs)
@@ -459,15 +465,18 @@ class LlmTracker:
 
             init_timestamp = get_ISO_time()
 
-            # Check Time Travel cache for matching prompt message
-            time_travel_response = fetch_completion_override_from_time_travel_cache(
+            completion_override = fetch_completion_override_from_time_travel_cache(
                 kwargs
             )
-            if time_travel_response:
-                result_model = ChatCompletion.model_validate_json(time_travel_response)
+            if completion_override:
+                result_model = ChatCompletion.model_validate_json(completion_override)
                 return self._handle_response_v1_openai(
                     result_model, kwargs, init_timestamp
                 )
+
+            prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
+            if prompt_override:
+                kwargs["messages"] = prompt_override
 
             # Call the original function with its original arguments
             result = await original_create_async(*args, **kwargs)
