@@ -444,7 +444,10 @@ class LlmTracker:
 
             prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
             if prompt_override:
-                kwargs["messages"] = prompt_override  # TODO: FIX
+                import json
+
+                prompt_override = json.loads(prompt_override)
+                kwargs["messages"] = prompt_override["messages"]
 
             # Call the original function with its original arguments
             result = original_create(*args, **kwargs)
