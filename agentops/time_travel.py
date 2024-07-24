@@ -12,7 +12,8 @@ load_dotenv()
 @singleton
 class TimeTravel:
     def __init__(self):
-        self._time_travel_map = None
+        self._completion_overrides_map = {}
+        self._prompt_override_map = {}
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(script_dir)
@@ -20,7 +21,13 @@ class TimeTravel:
 
         try:
             with open(cache_path, "r") as file:
-                self._time_travel_map = json.load(file)
+                time_travel_cache_json = json.load(file)
+                self._completion_overrides_map = time_travel_cache_json.get(
+                    "completion_overrides"
+                )
+                self._prompt_override_map = time_travel_cache_json.get(
+                    "prompt_override"
+                )
         except FileNotFoundError:
             return
 
@@ -51,13 +58,23 @@ def fetch_time_travel_id(ttd_id):
         manage_time_travel_state(activated=False, error=e)
 
 
-def fetch_response_from_time_travel_cache(kwargs):
+def fetch_completion_override_from_time_travel_cache(kwargs):
     if not check_time_travel_active():
         return
 
-    if TimeTravel()._time_travel_map:
+    if TimeTravel()._completion_overrides_map:
         search_prompt = str({"messages": kwargs["messages"]})
-        result_from_cache = TimeTravel()._time_travel_map.get(search_prompt)
+        result_from_cache = TimeTravel()._completion_overrides_map.get(search_prompt)
+        return result_from_cache
+
+
+def fetch_prompt_override_from_time_travel_cache(kwargs):
+    if not check_time_travel_active():
+        return
+
+    if TimeTravel()._prompt_override_map:
+        search_prompt = str({"messages": kwargs["messages"]})
+        result_from_cache = TimeTravel()._prompt_override_map.get(search_prompt)
         return result_from_cache
 
 
