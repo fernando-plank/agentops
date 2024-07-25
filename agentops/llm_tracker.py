@@ -476,7 +476,7 @@ class LlmTracker:
 
             prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
             if prompt_override:
-                kwargs["messages"] = prompt_override
+                kwargs["messages"] = prompt_override["messages"]
 
             # Call the original function with its original arguments
             result = await original_create_async(*args, **kwargs)
@@ -487,27 +487,61 @@ class LlmTracker:
 
     def override_litellm_completion(self):
         import litellm
+        from openai.types.chat import (
+            ChatCompletion,
+        )  # Note: litellm calls all LLM APIs using the OpenAI format
 
         original_create = litellm.completion
 
         def patched_function(*args, **kwargs):
             init_timestamp = get_ISO_time()
+
+            completion_override = fetch_completion_override_from_time_travel_cache(
+                kwargs
+            )
+            if completion_override:
+                result_model = ChatCompletion.model_validate_json(completion_override)
+                return self._handle_response_v1_openai(
+                    result_model, kwargs, init_timestamp
+                )
+
+            prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
+            if prompt_override:
+                kwargs["messages"] = prompt_override["messages"]
+
+            # Call the original function with its original arguments
             result = original_create(*args, **kwargs)
-            # Note: litellm calls all LLM APIs using the OpenAI format
             return self._handle_response_v1_openai(result, kwargs, init_timestamp)
 
         litellm.completion = patched_function
 
     def override_litellm_async_completion(self):
         import litellm
+        from openai.types.chat import (
+            ChatCompletion,
+        )  # Note: litellm calls all LLM APIs using the OpenAI format
 
-        original_create = litellm.acompletion
+        original_create_async = litellm.acompletion
 
         async def patched_function(*args, **kwargs):
             # Call the original function with its original arguments
             init_timestamp = get_ISO_time()
-            result = await original_create(*args, **kwargs)
-            # Note: litellm calls all LLM APIs using the OpenAI format
+
+            completion_override = fetch_completion_override_from_time_travel_cache(
+                kwargs
+            )
+            if completion_override:
+                result_model = ChatCompletion.model_validate_json(completion_override)
+                return self._handle_response_v1_openai(
+                    result_model, kwargs, init_timestamp
+                )
+
+            prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
+            if prompt_override:
+                kwargs["messages"] = prompt_override["messages"]
+
+            # Call the original function with its original arguments
+            result = await original_create_async(*args, **kwargs)
             return self._handle_response_v1_openai(result, kwargs, init_timestamp)
 
         # Override the original method with the patched one
@@ -516,12 +550,29 @@ class LlmTracker:
     def override_cohere_chat(self):
         import cohere
         import cohere.types
+        from cohere.types.non_streamed_chat_response import NonStreamedChatResponse
 
         original_chat = cohere.Client.chat
 
         def patched_function(*args, **kwargs):
-            # Call the original function with its original arguments
             init_timestamp = get_ISO_time()
+
+            completion_override = fetch_completion_override_from_time_travel_cache(
+                kwargs
+            )
+            if completion_override:
+                result_model = NonStreamedChatResponse.model_validate_json(
+                    completion_override
+                )
+                return self._handle_response_v1_openai(
+                    result_model, kwargs, init_timestamp
+                )
+
+            prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
+            if prompt_override:
+                kwargs["messages"] = prompt_override["messages"]
+
+            # Call the original function with its original arguments
             result = original_chat(*args, **kwargs)
             return self._handle_response_cohere(result, kwargs, init_timestamp)
 
@@ -530,12 +581,30 @@ class LlmTracker:
 
     def override_cohere_chat_stream(self):
         import cohere
+        from cohere.types.non_streamed_chat_response import NonStreamedChatResponse
 
         original_chat = cohere.Client.chat_stream
 
         def patched_function(*args, **kwargs):
-            # Call the original function with its original arguments
+
             init_timestamp = get_ISO_time()
+
+            completion_override = fetch_completion_override_from_time_travel_cache(
+                kwargs
+            )
+            if completion_override:
+                result_model = NonStreamedChatResponse.model_validate_json(
+                    completion_override
+                )
+                return self._handle_response_v1_openai(
+                    result_model, kwargs, init_timestamp
+                )
+
+            prompt_override = fetch_prompt_override_from_time_travel_cache(kwargs)
+            if prompt_override:
+                kwargs["messages"] = prompt_override["messages"]
+
+            # Call the original function with its original arguments
             result = original_chat(*args, **kwargs)
             return self._handle_response_cohere(result, kwargs, init_timestamp)
 
