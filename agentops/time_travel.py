@@ -43,12 +43,14 @@ def fetch_time_travel_id(ttd_id):
             )
 
         prompt_to_returns_map = {
-            (
-                str({"messages": item["prompt"]["messages"]})
-                if item["prompt"].get("type") == "chatml"
-                else str(item["prompt"])
-            ): item["returns"]
-            for item in ttd_res.body  # TODO: rename returns to completion_override
+            "completion_overrides": {
+                (
+                    str({"messages": item["prompt"]["messages"]})
+                    if item["prompt"].get("type") == "chatml"
+                    else str(item["prompt"])
+                ): item["returns"]
+                for item in ttd_res.body  # TODO: rename returns to completion_override
+            }
         }
         with open("time_travel.json", "w") as file:
             json.dump(prompt_to_returns_map, file, indent=4)
