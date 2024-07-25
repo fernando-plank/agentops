@@ -424,7 +424,7 @@ class LlmTracker:
 
     def override_openai_v1_completion(self):
         from openai.resources.chat import completions
-        from openai.types.chat import ChatCompletion
+        from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
         # Store the original method
         global original_create
@@ -437,7 +437,14 @@ class LlmTracker:
                 kwargs
             )
             if completion_override:
-                result_model = ChatCompletion.model_validate_json(completion_override)
+                try:
+                    result_model = ChatCompletion.model_validate_json(
+                        completion_override
+                    )
+                except:
+                    result_model = ChatCompletionChunk.model_validate_json(
+                        completion_override
+                    )
                 return self._handle_response_v1_openai(
                     result_model, kwargs, init_timestamp
                 )
@@ -455,7 +462,7 @@ class LlmTracker:
 
     def override_openai_v1_async_completion(self):
         from openai.resources.chat import completions
-        from openai.types.chat import ChatCompletion
+        from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
         # Store the original method
         global original_create_async
@@ -469,7 +476,14 @@ class LlmTracker:
                 kwargs
             )
             if completion_override:
-                result_model = ChatCompletion.model_validate_json(completion_override)
+                try:
+                    result_model = ChatCompletion.model_validate_json(
+                        completion_override
+                    )
+                except:
+                    result_model = ChatCompletionChunk.model_validate_json(
+                        completion_override
+                    )
                 return self._handle_response_v1_openai(
                     result_model, kwargs, init_timestamp
                 )
