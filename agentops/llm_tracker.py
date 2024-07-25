@@ -437,14 +437,24 @@ class LlmTracker:
                 kwargs
             )
             if completion_override:
-                try:
-                    result_model = ChatCompletion.model_validate_json(
-                        completion_override
+                result_model = None
+                pydantic_models = (ChatCompletion, ChatCompletionChunk)
+                for pydantic_model in pydantic_models:
+                    try:
+                        result_model = pydantic_model.model_validate_json(
+                            completion_override
+                        )
+                        break
+                    except Exception as e:
+                        pass
+
+                if result_model is None:
+                    logger.error(
+                        f"Time Travel: Pydantic validation failed for {pydantic_models} \n"
+                        f"Time Travel: Completion override was:\n"
+                        f"{pprint.pformat(completion_override)}"
                     )
-                except:
-                    result_model = ChatCompletionChunk.model_validate_json(
-                        completion_override
-                    )
+                    return None
                 return self._handle_response_v1_openai(
                     result_model, kwargs, init_timestamp
                 )
@@ -476,14 +486,24 @@ class LlmTracker:
                 kwargs
             )
             if completion_override:
-                try:
-                    result_model = ChatCompletion.model_validate_json(
-                        completion_override
+                result_model = None
+                pydantic_models = (ChatCompletion, ChatCompletionChunk)
+                for pydantic_model in pydantic_models:
+                    try:
+                        result_model = pydantic_model.model_validate_json(
+                            completion_override
+                        )
+                        break
+                    except Exception as e:
+                        pass
+
+                if result_model is None:
+                    logger.error(
+                        f"Time Travel: Pydantic validation failed for {pydantic_models} \n"
+                        f"Time Travel: Completion override was:\n"
+                        f"{pprint.pformat(completion_override)}"
                     )
-                except:
-                    result_model = ChatCompletionChunk.model_validate_json(
-                        completion_override
-                    )
+                    return None
                 return self._handle_response_v1_openai(
                     result_model, kwargs, init_timestamp
                 )
