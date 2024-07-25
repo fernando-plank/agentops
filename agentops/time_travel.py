@@ -77,7 +77,7 @@ def fetch_prompt_override_from_time_travel_cache(kwargs):
     if TimeTravel()._prompt_override_map:
         search_prompt = str({"messages": kwargs["messages"]})
         result_from_cache = TimeTravel()._prompt_override_map.get(search_prompt)
-        return result_from_cache
+        return json.loads(result_from_cache)
 
 
 def check_time_travel_active():
