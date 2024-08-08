@@ -3,8 +3,8 @@
 
 import os
 
-# os.environ["SERPER_API_KEY"] = "..."
-# os.environ["OPENAI_API_KEY"] = "..."
+os.environ["SERPER_API_KEY"] = "..."
+os.environ["OPENAI_API_KEY"] = "..."
 
 from dotenv import load_dotenv
 
