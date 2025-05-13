@@ -41,14 +41,11 @@
   </a>
 </p>
 
-
-
-https://github.com/user-attachments/assets/dfb4fa8d-d8c4-4965-9ff6-5b8514c1c22f
-
-
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/dfb4fa8d-d8c4-4965-9ff6-5b8514c1c22f" width="650" autoplay loop muted></video>
+</div>
 
 <br/>
-
 
 AgentOps helps developers build, evaluate, and monitor AI agents. From prototype to production.
 
@@ -58,12 +55,12 @@ AgentOps helps developers build, evaluate, and monitor AI agents. From prototype
   <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 30px; margin-bottom: 20px;">
     <a href="https://docs.agentops.ai/v1/integrations/openai-agents"><img src="docs/images/external/openai/agents-sdk.svg" height="45" alt="OpenAI Agents SDK"></a>
     <a href="https://docs.agentops.ai/v1/integrations/crewai"><img src="docs/v1/img/docs-icons/crew-banner.png" height="45" alt="CrewAI"></a>
-    <a href="https://docs.ag2.ai/docs/ecosystem/agentops"><img src="docs/images/external/autogen/ag2_blue.svg" height="45" alt="AG2 (AutoGen)"></a>
+    <a href="https://docs.ag2.ai/docs/ecosystem/agentops"><img src="docs/images/external/autogen/ag2.svg" height="45" alt="AG2 (AutoGen)"></a>
     <a href="https://docs.agentops.ai/v1/integrations/microsoft"><img src="docs/images/external/microsoft/microsoft_logo.svg" height="45" alt="Microsoft"></a>
   </div>
   
   <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 30px; margin-bottom: 20px;">
-    <a href="https://docs.agentops.ai/v1/integrations/langchain"><img src="docs/images/external/langchain/langchain-logo.png" height="45" alt="LangChain"></a>
+    <a href="https://docs.agentops.ai/v1/integrations/langchain"><img src="docs/images/external/langchain/langchain-logo.svg" height="45" alt="LangChain"></a>
     <a href="https://docs.agentops.ai/v1/integrations/camel"><img src="docs/images/external/camel/camel.png" height="45" alt="Camel AI"></a>
     <a href="https://docs.llamaindex.ai/en/stable/module_guides/observability/?h=agentops#agentops"><img src="docs/images/external/ollama/ollama-icon.png" height="45" alt="LlamaIndex"></a>
     <a href="https://docs.agentops.ai/v1/integrations/cohere"><img src="docs/images/external/cohere/cohere-logo.svg" height="45" alt="Cohere"></a>
@@ -126,7 +123,7 @@ All your sessions can be viewed on the [AgentOps dashboard](https://app.agentops
   </a>
 </details>
 
-<details open>
+<details>
   <summary>Summary Analytics</summary>
   <a href="https://app.agentops.ai?ref=gh">
    <img src="docs/images/external/app_screenshots/overview.png" style="width: 90%;" alt="Summary Analytics"/>
@@ -143,51 +140,87 @@ Add powerful observability to your agents, tools, and functions with as little c
 Refer to our [documentation](http://docs.agentops.ai)
 
 ```python
-# Automatically associate all Events with the agent that originated them
-from agentops import track_agent
+# Create a session span (root for all other spans)
+from agentops.sdk.decorators import session
 
-@track_agent(name='SomeCustomName')
+@session
+def my_workflow():
+    # Your session code here
+    return result
+```
+
+```python
+# Create an agent span for tracking agent operations
+from agentops.sdk.decorators import agent
+
+@agent
 class MyAgent:
-  ...
+    def __init__(self, name):
+        self.name = name
+        
+    # Agent methods here
 ```
 
 ```python
-# Automatically create ToolEvents for tools that agents will use
-from agentops import record_tool
+# Create operation/task spans for tracking specific operations
+from agentops.sdk.decorators import operation, task
 
-@record_tool('SampleToolName')
-def sample_tool(...):
-  ...
+@operation  # or @task
+def process_data(data):
+    # Process the data
+    return result
 ```
 
 ```python
-# Automatically create ActionEvents for other functions.
-from agentops import record_action
+# Create workflow spans for tracking multi-operation workflows
+from agentops.sdk.decorators import workflow
 
-@agentops.record_action('sample function being record')
-def sample_function(...):
-  ...
+@workflow
+def my_workflow(data):
+    # Workflow implementation
+    return result
 ```
 
 ```python
-# Manually record any other Events
-from agentops import record, ActionEvent
+# Nest decorators for proper span hierarchy
+from agentops.sdk.decorators import session, agent, operation
 
-record(ActionEvent("received_user_input"))
+@agent
+class MyAgent:
+    @operation
+    def nested_operation(self, message):
+        return f"Processed: {message}"
+        
+    @operation
+    def main_operation(self):
+        result = self.nested_operation("test message")
+        return result
+
+@session
+def my_session():
+    agent = MyAgent()
+    return agent.main_operation()
 ```
+
+All decorators support:
+- Input/Output Recording
+- Exception Handling
+- Async/await functions
+- Generator functions
+- Custom attributes and names
 
 ## Integrations 🦾
 
 ### OpenAI Agents SDK 🖇️
 
-Build multi-agent systems with tools, handoffs, and guardrails. AgentOps provides first-class integration with OpenAI Agents.
+Build multi-agent systems with tools, handoffs, and guardrails. AgentOps natively integrates with OpenAI Agents.
 
 ```bash
-pip install agents-sdk
+pip install openai-agents
 ```
 
 - [AgentOps integration example](https://docs.agentops.ai/v1/integrations/agentssdk)
-- [Official CrewAI documentation](https://docs.crewai.com/how-to/AgentOps-Observability)
+- [Official OpenAI Agents SDK documentation](https://openai.github.io/openai-agents-python/)
 
 ### CrewAI 🛶
 
@@ -231,7 +264,7 @@ from camel.models import ModelFactory
 from camel.types import ModelPlatformType, ModelType
 
 # Initialize AgentOps
-agentops.init(os.getenv("AGENTOPS_API_KEY"), default_tags=["CAMEL Example"])
+agentops.init(os.getenv("AGENTOPS_API_KEY"), tags=["CAMEL Example"])
 
 # Import toolkits after AgentOps init for tracking
 from camel.toolkits import SearchToolkit
@@ -282,7 +315,7 @@ To use the handler, import and set
 import os
 from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent, AgentType
-from agentops.partners.langchain_callback_handler import LangchainCallbackHandler
+from agentops.integration.callbacks.langchain import LangchainCallbackHandler
 
 AGENTOPS_API_KEY = os.environ['AGENTOPS_API_KEY']
 handler = LangchainCallbackHandler(api_key=AGENTOPS_API_KEY, tags=['Langchain Example'])

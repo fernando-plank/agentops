@@ -4,17 +4,19 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentops"
-version = "0.3.26"
+version = "0.4.11"
 authors = [
   { name="Alex Reibman", email="areibman@gmail.com" },
   { name="Shawn Qiu", email="siyangqiu@gmail.com" },
   { name="Braelyn Boynton", email="bboynton97@gmail.com" },
   { name="Howard Gil", email="howardbgil@gmail.com" },
   { name="Constantin Teodorescu", email="teocns@gmail.com" },
-  { name="Pratyush Shukla", email="ps4534@nyu.edu" }
+  { name="Pratyush Shukla", email="ps4534@nyu.edu" },
+  { name="Travis Dent", email="tcdent@gmail.com" },
+  { name="Dwij Patel", email="dwijpatel1704@gmail.com" }
 ]
 description = "Observability and DevTool Platform for AI Agents"
-readme = "README.md"
+# readme = "README.md"
 requires-python = ">=3.9,<3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -32,25 +34,26 @@ dependencies = [
     "termcolor>=2.3.0,<2.5.0",
     "PyYAML>=5.3,<7.0",
     "packaging>=21.0,<25.0", # Lower bound of 21.0 ensures compatibility with Python 3.9+
-    "opentelemetry-api==1.22.0; python_version<'3.10'",
-    "opentelemetry-api>=1.27.0; python_version>='3.10'",
-    "opentelemetry-sdk==1.22.0; python_version<'3.10'",
-    "opentelemetry-sdk>=1.27.0; python_version>='3.10'",
-    "opentelemetry-exporter-otlp-proto-http==1.22.0; python_version<'3.10'",
-    "opentelemetry-exporter-otlp-proto-http>=1.27.0; python_version>='3.10'",
+    "httpx>=0.24.0,<0.29.0", # Required for legacy module compatibility
+    "opentelemetry-sdk==1.29.0; python_version<'3.10'",
+    "opentelemetry-sdk>1.29.0; python_version>='3.10'",
+    "opentelemetry-api==1.29.0; python_version<'3.10'",
+    "opentelemetry-api>1.29.0; python_version>='3.10'",
+    "opentelemetry-exporter-otlp-proto-http==1.29.0; python_version<'3.10'",
+    "opentelemetry-exporter-otlp-proto-http>1.29.0; python_version>='3.10'",
+    "ordered-set>=4.0.0,<5.0.0",
+    "wrapt>=1.0.0,<2.0.0",
+    # "opentelemetry-instrumentation",
+    "opentelemetry-instrumentation==0.50b0; python_version<'3.10'",
+    "opentelemetry-instrumentation>=0.50b0; python_version>='3.10'",
+    "opentelemetry-semantic-conventions==0.50b0; python_version<'3.10'",
+    "opentelemetry-semantic-conventions>=0.50b0; python_version>='3.10'",
 ]
 
 [dependency-groups]
 test = [
-    "openai>=1.0.0",
+    "openai>=1.60.0",
     "anthropic",
-    "cohere",
-    "litellm",
-    "ai21>=3.0.0",
-    "groq",
-    "ollama",
-    "mistralai",
-    "google-generativeai>=0.1.0",
     # ;;
     # The below is a really hard dependency, that can be installed only between python >=3.10,<3.13.
     # CI will fail because all tests will automatically pull this dependency group;
@@ -59,9 +62,9 @@ test = [
     # "crewai-tools @ git+https://github.com/crewAIInc/crewAI-tools.git@a14091abb24527c97ccfcc8539d529c8b4559a0f; python_version>='3.10'", 
     # ------------------------------------------------------------------------------------------------------------------------------------
     # ;;
-    "autogen<0.4.0",
     "pytest-cov",
     "fastapi[standard]",
+    "openai-agents[voice]",
 ]
 
 dev = [
@@ -72,8 +75,7 @@ dev = [
     "pytest-mock", # Mocking capabilities for isolating agent components
     "pyfakefs", # File system testing
     "pytest-recording", # Alternative to pytest-vcr with better Python 3.x support
-    # TODO: Use release version after vcrpy is released with this fix.
-    "vcrpy @ git+https://github.com/kevin1024/vcrpy.git@5f1b20c4ca4a18c1fc8cfe049d7df12ca0659c9b",
+    "vcrpy>=0.7.0",
     # Code quality and type checking
     "ruff", # Fast Python linter for maintaining code quality
     "mypy", # Static type checking for better reliability
@@ -84,6 +86,7 @@ dev = [
     # Agent integration testing
     "pytest-sugar>=1.0.0",
     "pdbpp>=0.10.3",
+    "ipython>=8.18.1",
 ]
 
 [project.urls]
@@ -92,18 +95,11 @@ Issues = "https://github.com/AgentOps-AI/agentops/issues"
 
 [tool.uv]
 compile-bytecode = true  # Enable bytecode compilation for better performance
+resolution = "highest"
 default-groups = ["test", "dev"]  # Default groups to install for development
 constraint-dependencies = [
     "pydantic>=2.8.0; python_version>='3.13'",  # Ensure Python 3.13 compatibility
     "typing-extensions; python_version>='3.13'",  # Required for Pydantic with Python 3.13
-    # For Python 3.9, use original OpenTelemetry versions
-    "opentelemetry-api==1.22.0; python_version<'3.10'",
-    "opentelemetry-sdk==1.22.0; python_version<'3.10'",
-    "opentelemetry-exporter-otlp-proto-http==1.22.0; python_version<'3.10'",
-    # For Python ≥3.10 (where autogen-core might be present), use newer versions
-    "opentelemetry-api>=1.27.0; python_version>='3.10'",
-    "opentelemetry-sdk>=1.27.0; python_version>='3.10'",
-    "opentelemetry-exporter-otlp-proto-http>=1.27.0; python_version>='3.10'",
 ]
 
 [tool.autopep8]
@@ -118,18 +114,18 @@ pythonpath = ["."]
 faulthandler_timeout = 30  # Reduced from 60
 timeout = 60  # Reduced from 300
 disable_socket = true  # Add this to prevent hanging on socket cleanup
+log_cli = true  # Enable logging to console
+log_cli_level = "DEBUG"  # Set log level to INFO
 
 [tool.ruff]
 line-length = 120
 
 [tool.ruff.lint]
 ignore = [
-    "F401",  # Unused imports
     "E712",  # Comparison to True/False
     "E711",  # Comparison to None
     "E722",  # Bare except
-    "F821",  # Undefined names
-    "F841",  # Unused variables
+    "E731",  # Use lambda instead of def
 ]
 
 exclude = [
@@ -168,6 +164,12 @@ exclude = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["agentops"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"third_party" = "."
+
+[tool.hatch.build.targets.wheel.sources]
+"third_party" = "third_party"
 
 [tool.hatch.build]
 exclude = [
